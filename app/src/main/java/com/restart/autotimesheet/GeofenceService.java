@@ -1,14 +1,11 @@
 package com.restart.autotimesheet;
 
-
 import android.app.IntentService;
 import android.content.Intent;
 import android.util.Log;
 
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofencingEvent;
-
-import java.util.List;
 
 public class GeofenceService extends IntentService {
 
@@ -23,17 +20,20 @@ public class GeofenceService extends IntentService {
         GeofencingEvent event = GeofencingEvent.fromIntent(intent);
 
         if (event.hasError()) {
-            // TODO: ERROR
+            Log.e(TAG, "Service popped an error");
         } else {
             int transition = event.getGeofenceTransition();
-            List<Geofence> geofences = event.getTriggeringGeofences();
-            Geofence geofence = geofences.get(0);
-            String requestId = geofence.getRequestId();
 
+            // If you have more than one geofence this is one way to keep track. Using requestId (MyGeofenceId)
+/*            List<Geofence> geofences = event.getTriggeringGeofences();
+            Geofence geofence = geofences.get(0);
+            String requestId = geofence.getRequestId(); */
+
+            // TODO How about we have a notification here instead of a Log?
             if (transition == Geofence.GEOFENCE_TRANSITION_ENTER) {
-                Log.d(TAG, "Entering geofence - " + requestId);
+                Log.d(TAG, "Entering geofence area");
             } else if (transition == Geofence.GEOFENCE_TRANSITION_EXIT) {
-                Log.d(TAG, "Exiting geofence - " + requestId);
+                Log.d(TAG, "Exiting geofence area");
             }
         }
     }
