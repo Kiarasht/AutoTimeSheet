@@ -11,9 +11,10 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -32,6 +33,10 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = ".MainActivity";
     private static final int REQUEST_PERMISSION_LOCATION = 1234;
 
+    private RecyclerView.LayoutManager mLayoutManager;
+    private RecyclerView.Adapter mAdapter;
+    private RecyclerView mRecyclerView;
+
     private GoogleApiClient mGoogleApiClient;
     private Context mContext;
 
@@ -46,14 +51,27 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mContext = getApplicationContext();
+        mRecyclerView = (RecyclerView) findViewById(R.id.my_recycler_view);
+        mRecyclerView.setHasFixedSize(true);
+        mLayoutManager = new LinearLayoutManager(this);
+        mRecyclerView.setLayoutManager(mLayoutManager);
+        mAdapter = new MyAdapter(new String[] {"One", "Two", "Three", "Four", "Five",
+                "One", "Two", "Three", "Four", "Five",
+                "One", "Two", "Three", "Four", "Five",
+                "One", "Two", "Three", "Four", "Five",
+                "One", "Two", "Three", "Four", "Five",
+                "One", "Two", "Three", "Four", "Five",
+                "One", "Two", "Three", "Four", "Five",
+                "One", "Two", "Three", "Four", "Five",
+                "One", "Two", "Three", "Four", "Five",
+                "One", "Two", "Three", "Four", "Five",
+                "One", "Two", "Three", "Four", "Five",
+                "One", "Two", "Three", "Four", "Five",
+                "One", "Two", "Three", "Four", "Five",
+                "One", "Two", "Three", "Four", "Five",
+                "One", "Two", "Three", "Four", "Five"});
+        mRecyclerView.setAdapter(mAdapter);
 
-        Button button = (Button) findViewById(R.id.startLocationMonitoring);
-        button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                startActivity(new Intent(mContext, GeofenceActivity.class));
-            }
-        });
 
         // Get GoogleApiClient
         mGoogleApiClient = new GoogleApiClient.Builder(this)

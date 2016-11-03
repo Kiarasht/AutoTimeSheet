@@ -31,15 +31,12 @@ public class GeofenceService extends IntentService {
     @Override
     public void onCreate() {
         super.onCreate();
-
         mContext = getBaseContext();
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-
-
     }
 
     @Override
