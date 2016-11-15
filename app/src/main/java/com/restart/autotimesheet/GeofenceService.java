@@ -55,9 +55,9 @@ public class GeofenceService extends IntentService {
                 String requestId = aGeofence.getRequestId();
 
                 if (transition == Geofence.GEOFENCE_TRANSITION_ENTER) {
-                    notification("You have entered area " + requestId + " !");
+                    notification("You have entered area " + requestId + "!");
                 } else if (transition == Geofence.GEOFENCE_TRANSITION_EXIT) {
-                    notification("You have exited area " + requestId + " !");
+                    notification("You have exited area " + requestId + "!");
                     onDestroy();
                 }
             }

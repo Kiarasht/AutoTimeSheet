@@ -1,4 +1,7 @@
 <resources>
     <string name="app_name">AutoTimeSheet</string>
     <string name="title_activity_main2">Main2Activity</string>
+    <string name="input_hint">ex: \"Job\", \"School\"</string>
+    <string name="input">Geofence Title</string>
+    <string name="input_prefill"></string>
 </resources>

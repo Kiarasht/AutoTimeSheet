@@ -20,10 +20,17 @@ android {
 }
 
 dependencies {
+    // I can import libraries by putting .jar files into my 'app\libs' project folder
     compile fileTree(dir: 'libs', include: ['*.jar'])
+    
     testCompile 'junit:junit:4.12'
     compile 'com.android.support:appcompat-v7:25.0.0'
     compile 'com.android.support:design:25.0.0'
+
+    // I need the recyclerview and google's location api
     compile 'com.android.support:recyclerview-v7:25.0.0'
     compile 'com.google.android.gms:play-services-location:9.8.0'
+
+    // I can import libraries like this using gradle dependency available via jCenter
+    compile 'com.afollestad.material-dialogs:core:0.9.1.0'
 }

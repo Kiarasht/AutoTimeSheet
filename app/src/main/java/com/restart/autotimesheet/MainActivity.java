@@ -4,19 +4,23 @@ import android.Manifest;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.InputType;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import com.afollestad.materialdialogs.MaterialDialog;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -27,21 +31,22 @@ import com.google.android.gms.location.GeofencingRequest;
 import com.google.android.gms.location.LocationServices;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = ".MainActivity";
     private static final int REQUEST_PERMISSION_LOCATION = 1234;
 
-    private RecyclerView.LayoutManager mLayoutManager;
-    private RecyclerView.Adapter mAdapter;
-    private RecyclerView mRecyclerView;
-
+    private SharedPreferences mSharedPreferences;
     private GoogleApiClient mGoogleApiClient;
+    private RecyclerView recyclerView;
+    private Set<String> mList;
     private Context mContext;
 
     /**
-     * Set up the basic button layouts, set up the OnClickListeners, and GoogleApiClient with the
+     * Set up the basic layout, OnClickListeners, and GoogleApiClient with the
      * location permissions it requires to function.
      *
      * @param savedInstanceState N/A
@@ -51,46 +56,34 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mContext = getApplicationContext();
-        mRecyclerView = (RecyclerView) findViewById(R.id.my_recycler_view);
-        mRecyclerView.setHasFixedSize(true);
-        mLayoutManager = new LinearLayoutManager(this);
-        mRecyclerView.setLayoutManager(mLayoutManager);
-        mAdapter = new MyAdapter(new String[] {"One", "Two", "Three", "Four", "Five",
-                "One", "Two", "Three", "Four", "Five",
-                "One", "Two", "Three", "Four", "Five",
-                "One", "Two", "Three", "Four", "Five",
-                "One", "Two", "Three", "Four", "Five",
-                "One", "Two", "Three", "Four", "Five",
-                "One", "Two", "Three", "Four", "Five",
-                "One", "Two", "Three", "Four", "Five",
-                "One", "Two", "Three", "Four", "Five",
-                "One", "Two", "Three", "Four", "Five",
-                "One", "Two", "Three", "Four", "Five",
-                "One", "Two", "Three", "Four", "Five",
-                "One", "Two", "Three", "Four", "Five",
-                "One", "Two", "Three", "Four", "Five",
-                "One", "Two", "Three", "Four", "Five"});
-        mRecyclerView.setAdapter(mAdapter);
+        mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
+        recyclerView = (RecyclerView) findViewById(R.id.my_recycler_view);
+        recyclerView.setHasFixedSize(true);
+        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
+        recyclerView.setLayoutManager(layoutManager);
+
+        mList = mSharedPreferences.getStringSet("geoFences", null);
+        if (mList != null) {
+            RecyclerView.Adapter adapter = new MyAdapter(mList.toArray(new String[mList.size()]));
+            recyclerView.setAdapter(adapter);
+        } else {
+           mList = new HashSet<>();
+        }
 
         // Get GoogleApiClient
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addApi(LocationServices.API)
                 .addConnectionCallbacks(new GoogleApiClient.ConnectionCallbacks() {
                     @Override
-                    public void onConnected(@Nullable Bundle bundle) {
-                        Log.d(TAG, "GoogleApiClient successfully connected! Yay!");
-                    }
+                    public void onConnected(@Nullable Bundle bundle) {}
 
                     @Override
-                    public void onConnectionSuspended(int i) {
-                    }
+                    public void onConnectionSuspended(int i) {}
                 })
                 .addOnConnectionFailedListener(new GoogleApiClient.OnConnectionFailedListener() {
                     @Override
-                    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-                        Log.e(TAG, "GoogleApiClient failed to connect! Boo!");
-                    }
+                    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {}
                 }).build();
     }
 
@@ -128,12 +121,23 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Start the Geofence process.
+     *
+     * @param name Name of the newly created geofence
      */
-    private void startGeofenceMonitoring() {
+    private void startGeofenceMonitoring(String name) {
         try {
+            if (mList != null && !mList.contains(name)) {
+                mList.add(name);
+                mSharedPreferences.edit().putStringSet("geoFences", mList).apply();
+            } else {
+                Toast.makeText(mContext, "Already exists", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            recyclerView.setAdapter(new MyAdapter(mList.toArray(new String[mList.size()])));
+
             // Set up a geofence criteria by giving it an id, location + radius, responsiveness, transitions, etc...
             Geofence geofence = new Geofence.Builder()
-                    .setRequestId("Job")
+                    .setRequestId(name)
                     .setCircularRegion(45.545184, -122.845018, 100)
                     .setExpirationDuration(Geofence.NEVER_EXPIRE)
                     .setNotificationResponsiveness(1000)
@@ -181,11 +185,29 @@ public class MainActivity extends AppCompatActivity {
         LocationServices.GeofencingApi.removeGeofences(mGoogleApiClient, geofenceIds);
     }
 
+    /**
+     * Starting a new geofence to track using the float action bar. First check permissions.
+     *
+     * @param view View of the float action bar
+     */
     public void newGeofence(View view) {
         String[] locationPermission = new String[]{Manifest.permission.ACCESS_FINE_LOCATION};
 
         if (isPermissionGranted(locationPermission)) {
-            startActivity(new Intent(mContext, GeofenceActivity.class));
+            new MaterialDialog.Builder(this)
+                    .title(R.string.input)
+                    .inputType(InputType.TYPE_CLASS_TEXT)
+                    .input(R.string.input_hint, R.string.input_prefill, new MaterialDialog.InputCallback() {
+                        @Override
+                        public void onInput(@NonNull MaterialDialog dialog, CharSequence input) {
+                            if (input.toString().equals("")) {
+                                Toast.makeText(mContext, "Empty title", Toast.LENGTH_SHORT).show();
+                            } else {
+                                startGeofenceMonitoring(input.toString());
+                            }
+                        }
+                    }).show();
+
         } else {
             getPermission(locationPermission);
         }
@@ -234,10 +256,8 @@ public class MainActivity extends AppCompatActivity {
                                            @NonNull String permissions[], @NonNull int[] grantResults) {
         switch (requestCode) {
             case REQUEST_PERMISSION_LOCATION:
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED
-                        && grantResults[1] == PackageManager.PERMISSION_GRANTED
-                        && grantResults[2] == PackageManager.PERMISSION_GRANTED) {
-                    startActivity(new Intent(mContext, GeofenceActivity.class));
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    newGeofence(null);
                 } else {
                     Toast.makeText(mContext, "Need location permission to track a time sheet", Toast.LENGTH_SHORT).show();
                 }
