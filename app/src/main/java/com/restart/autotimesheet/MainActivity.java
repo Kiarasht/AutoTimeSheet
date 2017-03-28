@@ -32,6 +32,7 @@ import com.google.android.gms.location.LocationServices;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
@@ -41,9 +42,10 @@ public class MainActivity extends AppCompatActivity {
 
     private SharedPreferences mSharedPreferences;
     private GoogleApiClient mGoogleApiClient;
-    private RecyclerView recyclerView;
-    private Set<String> mList;
+    private RecyclerView mRecyclerView;
     private Context mContext;
+    private MyAdapter mAdapter;
+    private List<String> mItems;
 
     /**
      * Set up the basic layout, OnClickListeners, and GoogleApiClient with the
@@ -58,18 +60,19 @@ public class MainActivity extends AppCompatActivity {
         mContext = getApplicationContext();
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
-        recyclerView = (RecyclerView) findViewById(R.id.my_recycler_view);
-        recyclerView.setHasFixedSize(true);
+        mRecyclerView = (RecyclerView) findViewById(R.id.my_recycler_view);
+        mRecyclerView.setHasFixedSize(true);
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
-        recyclerView.setLayoutManager(layoutManager);
+        mRecyclerView.setLayoutManager(layoutManager);
 
-        mList = mSharedPreferences.getStringSet("geoFences", null);
-        if (mList != null) {
-            RecyclerView.Adapter adapter = new MyAdapter(mList.toArray(new String[mList.size()]));
-            recyclerView.setAdapter(adapter);
-        } else {
-           mList = new HashSet<>();
+        Set<String> list = mSharedPreferences.getStringSet("geoFences", null);
+        if (list == null) {
+            list = new HashSet<>();
         }
+
+        mItems = new ArrayList<>(list);
+        mAdapter = new MyAdapter(mItems);
+        mRecyclerView.setAdapter(mAdapter);
 
         // Get GoogleApiClient
         mGoogleApiClient = new GoogleApiClient.Builder(this)
@@ -126,14 +129,20 @@ public class MainActivity extends AppCompatActivity {
      */
     private void startGeofenceMonitoring(String name) {
         try {
-            if (mList != null && !mList.contains(name)) {
-                mList.add(name);
-                mSharedPreferences.edit().putStringSet("geoFences", mList).apply();
+            if (mItems != null && !mItems.contains(name)) {
+                mItems.add(name);
+                mSharedPreferences.edit().putStringSet("geoFences", new HashSet<>(mItems)).apply();
+                this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mAdapter.notifyDataSetChanged();
+                    }
+                });
+
             } else {
                 Toast.makeText(mContext, "Already exists", Toast.LENGTH_SHORT).show();
                 return;
             }
-            recyclerView.setAdapter(new MyAdapter(mList.toArray(new String[mList.size()])));
 
             // Set up a geofence criteria by giving it an id, location + radius, responsiveness, transitions, etc...
             Geofence geofence = new Geofence.Builder()
