@@ -1,8 +1,10 @@
 package com.restart.autotimesheet;
 
 import android.Manifest;
+import android.app.AlertDialog;
 import android.app.PendingIntent;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -15,12 +17,10 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.text.InputType;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
-import com.afollestad.materialdialogs.MaterialDialog;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -194,20 +194,17 @@ public class MainActivity extends AppCompatActivity {
         String[] locationPermission = new String[]{Manifest.permission.ACCESS_FINE_LOCATION};
 
         if (isPermissionGranted(locationPermission)) {
-            new MaterialDialog.Builder(this)
-                    .title(R.string.input)
-                    .inputType(InputType.TYPE_CLASS_TEXT)
-                    .input(R.string.input_hint, R.string.input_prefill, new MaterialDialog.InputCallback() {
-                        @Override
-                        public void onInput(@NonNull MaterialDialog dialog, CharSequence input) {
-                            if (input.toString().equals("")) {
-                                Toast.makeText(mContext, "Empty title", Toast.LENGTH_SHORT).show();
-                            } else {
-                                startGeofenceMonitoring(input.toString());
-                            }
-                        }
-                    }).show();
+            new AlertDialog.Builder(this).setTitle("asd").setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
 
+                }
+            }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+
+                }
+            }).show();
         } else {
             getPermission(locationPermission);
         }
