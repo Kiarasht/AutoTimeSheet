@@ -206,7 +206,7 @@ public class MainActivity extends AppCompatActivity {
             new AlertDialog.Builder(this).setTitle("asd").setPositiveButton("OK", new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialogInterface, int i) {
-
+                    startGeofenceMonitoring("OK");
                 }
             }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                 @Override
